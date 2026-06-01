@@ -1,0 +1,53 @@
+2026-06-01 04:02:20.464 [info] 
+
+
+
+
+2026-06-01 04:02:20.471 [info] Extension host agent started.
+2026-06-01 04:02:20.483 [info] Started initializing default profile extensions in extensions installation folder. file:///openhands/.openvscode-server/extensions
+2026-06-01 04:02:20.504 [error] Error: Unable to read file '/openhands/.openvscode-server/extensions/node_modules/package.json' (Error: Unable to resolve nonexistent file '/openhands/.openvscode-server/extensions/node_modules/package.json')
+    at il.G (file:///openhands/.openvscode-server/out/server-main.js:64:25853)
+    at il.F (file:///openhands/.openvscode-server/out/server-main.js:64:25678)
+    at async il.D (file:///openhands/.openvscode-server/out/server-main.js:64:25050)
+    at async Yc.u (file:///openhands/.openvscode-server/out/server-main.js:54:38686)
+    at async Yc.scanExtension (file:///openhands/.openvscode-server/out/server-main.js:54:37235)
+    at async Promise.all (index 50)
+    at async Yc.r (file:///openhands/.openvscode-server/out/server-main.js:54:35660)
+    at async fl.scanAllUserExtensions (file:///openhands/.openvscode-server/out/server-main.js:54:28682)
+    at async file:///openhands/.openvscode-server/out/server-main.js:54:30624
+    at async fl.initializeDefaultProfileExtensions (file:///openhands/.openvscode-server/out/server-main.js:54:30402)
+    at async h7.s (file:///openhands/.openvscode-server/out/server-main.js:55:7758)
+2026-06-01 04:02:20.507 [error] Error: Unable to read file '/openhands/.openvscode-server/extensions/node_modules/package.json' (Error: Unable to resolve nonexistent file '/openhands/.openvscode-server/extensions/node_modules/package.json')
+    at il.G (file:///openhands/.openvscode-server/out/server-main.js:64:25853)
+    at il.F (file:///openhands/.openvscode-server/out/server-main.js:64:25678)
+    at async il.D (file:///openhands/.openvscode-server/out/server-main.js:64:25050)
+    at async Yc.u (file:///openhands/.openvscode-server/out/server-main.js:54:38686)
+    at async Yc.scanExtension (file:///openhands/.openvscode-server/out/server-main.js:54:37235)
+    at async Promise.all (index 50)
+    at async Yc.r (file:///openhands/.openvscode-server/out/server-main.js:54:35660)
+    at async fl.scanAllUserExtensions (file:///openhands/.openvscode-server/out/server-main.js:54:28682)
+    at async Gh.I (file:///openhands/.openvscode-server/out/server-main.js:55:25989)
+    at async Gh.cleanUp (file:///openhands/.openvscode-server/out/server-main.js:55:19624)
+    at async tl.cleanUp (file:///openhands/.openvscode-server/out/server-main.js:55:14114)
+2026-06-01 04:02:20.567 [error] [/openhands/.openvscode-server/extensions/grunt]: Version specified in `engines.vscode` (*) is not specific enough. For vscode versions before 1.0.0, please define at a minimum the major and minor desired version. E.g. ^0.10.0, 0.10.x, 0.11.0, etc.
+2026-06-01 04:02:20.567 [error] [/openhands/.openvscode-server/extensions/gulp]: Version specified in `engines.vscode` (*) is not specific enough. For vscode versions before 1.0.0, please define at a minimum the major and minor desired version. E.g. ^0.10.0, 0.10.x, 0.11.0, etc.
+2026-06-01 04:02:20.568 [error] [/openhands/.openvscode-server/extensions/jake]: Version specified in `engines.vscode` (*) is not specific enough. For vscode versions before 1.0.0, please define at a minimum the major and minor desired version. E.g. ^0.10.0, 0.10.x, 0.11.0, etc.
+2026-06-01 04:02:20.581 [error] [/openhands/.openvscode-server/extensions/grunt]: Version specified in `engines.vscode` (*) is not specific enough. For vscode versions before 1.0.0, please define at a minimum the major and minor desired version. E.g. ^0.10.0, 0.10.x, 0.11.0, etc.
+2026-06-01 04:02:20.582 [error] [/openhands/.openvscode-server/extensions/gulp]: Version specified in `engines.vscode` (*) is not specific enough. For vscode versions before 1.0.0, please define at a minimum the major and minor desired version. E.g. ^0.10.0, 0.10.x, 0.11.0, etc.
+2026-06-01 04:02:20.583 [error] [/openhands/.openvscode-server/extensions/jake]: Version specified in `engines.vscode` (*) is not specific enough. For vscode versions before 1.0.0, please define at a minimum the major and minor desired version. E.g. ^0.10.0, 0.10.x, 0.11.0, etc.
+2026-06-01 04:02:20.598 [info] Completed initializing default profile extensions in extensions installation folder. file:///openhands/.openvscode-server/extensions
+2026-06-01 04:02:20.608 [error] Error: Unable to read file '/openhands/.openvscode-server/extensions/node_modules/package.json' (Error: Unable to resolve nonexistent file '/openhands/.openvscode-server/extensions/node_modules/package.json')
+    at il.G (file:///openhands/.openvscode-server/out/server-main.js:64:25853)
+    at il.F (file:///openhands/.openvscode-server/out/server-main.js:64:25678)
+    at async il.D (file:///openhands/.openvscode-server/out/server-main.js:64:25050)
+    at async Yc.u (file:///openhands/.openvscode-server/out/server-main.js:54:38686)
+    at async Yc.scanExtension (file:///openhands/.openvscode-server/out/server-main.js:54:37235)
+    at async Promise.all (index 51)
+    at async Yc.r (file:///openhands/.openvscode-server/out/server-main.js:54:35660)
+    at async fl.scanAllUserExtensions (file:///openhands/.openvscode-server/out/server-main.js:54:28682)
+    at async Gh.scanAllUserExtensions (file:///openhands/.openvscode-server/out/server-main.js:55:20180)
+    at async h7.H (file:///openhands/.openvscode-server/out/server-main.js:55:9952)
+    at async h7.s (file:///openhands/.openvscode-server/out/server-main.js:55:7847)
+2026-06-01 04:02:20.631 [error] [/openhands/.openvscode-server/extensions/grunt]: Version specified in `engines.vscode` (*) is not specific enough. For vscode versions before 1.0.0, please define at a minimum the major and minor desired version. E.g. ^0.10.0, 0.10.x, 0.11.0, etc.
+2026-06-01 04:02:20.631 [error] [/openhands/.openvscode-server/extensions/gulp]: Version specified in `engines.vscode` (*) is not specific enough. For vscode versions before 1.0.0, please define at a minimum the major and minor desired version. E.g. ^0.10.0, 0.10.x, 0.11.0, etc.
+2026-06-01 04:02:20.632 [error] [/openhands/.openvscode-server/extensions/jake]: Version specified in `engines.vscode` (*) is not specific enough. For vscode versions before 1.0.0, please define at a minimum the major and minor desired version. E.g. ^0.10.0, 0.10.x, 0.11.0, etc.
