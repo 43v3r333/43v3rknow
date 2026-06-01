@@ -78,30 +78,57 @@ function App() {
     setCode(codeContent);
     setSourceName(source);
     
-    // Run debt analysis first
-    startStream('debt', codeContent, language, (fullText) => {
-      try {
-        let cleaned = fullText.trim();
-        if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);
-        if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);
-        const parsed = JSON.parse(cleaned.trim());
-        setDebtData(parsed);
-        
-        // Save session
+    // Clear previous results
+    setDebtData(null);
+    setArchData(null);
+    setRefactorData(null);
+    setDocsData(null);
+    
+    // Sequential analysis runner using callbacks
+    let currentIndex = 0;
+    const analyses = [
+      { mode: 'debt', setter: setDebtData },
+      { mode: 'map', setter: setArchData },
+      { mode: 'docs', setter: setDocsData },
+      { mode: 'refactor', setter: setRefactorData }
+    ];
+    
+    const runNextAnalysis = () => {
+      if (currentIndex >= analyses.length) {
+        // All analyses complete - save session
         saveSession({
           source,
           language,
-          debtScore: parsed.debt_score,
-          summary: parsed.summary,
-          results: { debt: parsed },
+          debtScore: debtData?.debt_score,
+          summary: debtData?.summary,
+          results: { debt: debtData, arch: archData, docs: docsData, refactor: refactorData },
           code: codeContent,
           mode: 'debt'
         });
-      } catch (e) {
-        console.error('Failed to parse debt response:', e);
+        return;
       }
-    });
-  }, [startStream, saveSession]);
+      
+      const { mode, setter } = analyses[currentIndex];
+      const isFirst = currentIndex === 0;
+      
+      startStream(mode, codeContent, language, (fullText) => {
+        try {
+          let cleaned = fullText.trim();
+          cleaned = cleaned.replace(/^```json\n?/, '').replace(/^```\n?/, '').replace(/\n?```$/, '');
+          const parsed = JSON.parse(cleaned);
+          setter(parsed);
+        } catch (e) {
+          console.error(`Failed to parse ${mode} response`);
+        }
+        
+        // Move to next analysis
+        currentIndex++;
+        runNextAnalysis();
+      }, !isFirst); // Don't append on first analysis
+    };
+    
+    runNextAnalysis();
+  }, [startStream, saveSession, debtData, archData, docsData, refactorData]);
 
   const handleCommand = useCallback((cmdId) => {
     if (!code.trim()) {
@@ -266,7 +293,7 @@ function App() {
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4" />
             <span className="font-mono text-xs font-medium">
-              Approve the Anthropic integration when prompted to enable AI analysis
+              Powered by NVIDIA AI • Analysis runs automatically on submit
             </span>
           </div>
           <button

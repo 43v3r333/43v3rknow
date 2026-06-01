@@ -6,9 +6,11 @@ export function useStream() {
   const [error, setError] = useState(null);
   const abortControllerRef = useRef(null);
 
-  const startStream = useCallback(async (mode, code, language, onComplete) => {
+  const startStream = useCallback(async (mode, code, language, onComplete, append = false) => {
+    if (!append) {
+      setStreamText('');
+    }
     setIsStreaming(true);
-    setStreamText('');
     setError(null);
     
     abortControllerRef.current = new AbortController();
@@ -28,7 +30,7 @@ export function useStream() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let fullText = '';
+      let fullText = append ? streamText : '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -43,7 +45,7 @@ export function useStream() {
             if (data === '[DONE]') {
               setIsStreaming(false);
               if (onComplete) onComplete(fullText);
-              return;
+              return fullText;
             }
             
             try {
@@ -64,12 +66,13 @@ export function useStream() {
     } catch (err) {
       if (err.name === 'AbortError') {
         setIsStreaming(false);
-        return;
+        return null;
       }
       setError(err.message);
       setIsStreaming(false);
+      return null;
     }
-  }, []);
+  }, [streamText]);
 
   const stopStream = useCallback(() => {
     if (abortControllerRef.current) {
