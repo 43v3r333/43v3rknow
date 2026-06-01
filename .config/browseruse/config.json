@@ -1,0 +1,34 @@
+{
+  "browser_profile": {
+    "5cc25af7-3a47-46b7-bf09-52fd8e279da5": {
+      "id": "5cc25af7-3a47-46b7-bf09-52fd8e279da5",
+      "default": true,
+      "created_at": "2026-06-01T04:02:20.281399",
+      "headless": false,
+      "user_data_dir": null,
+      "allowed_domains": null,
+      "downloads_path": null
+    }
+  },
+  "llm": {
+    "0cf41d59-6fc8-4b86-9779-4357c8bc026e": {
+      "id": "0cf41d59-6fc8-4b86-9779-4357c8bc026e",
+      "default": true,
+      "created_at": "2026-06-01T04:02:20.281418",
+      "api_key": "your-openai-api-key-here",
+      "model": "gpt-4.1-mini",
+      "temperature": null,
+      "max_tokens": null
+    }
+  },
+  "agent": {
+    "e322c4d9-627d-4508-ae61-7ede5d9a9c81": {
+      "id": "e322c4d9-627d-4508-ae61-7ede5d9a9c81",
+      "default": true,
+      "created_at": "2026-06-01T04:02:20.281429",
+      "max_steps": null,
+      "use_vision": null,
+      "system_prompt": null
+    }
+  }
+}
