@@ -1,0 +1,13 @@
+run = "npm run dev"
+entrypoint = "server/index.js"
+
+[nix]
+channel = "stable-23_05"
+
+[deployment]
+run = ["npm", "start"]
+deploymentTarget = "cloud"
+
+[[ports]]
+localPort = 3000
+externalPort = 80
