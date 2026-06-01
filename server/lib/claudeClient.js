@@ -10,11 +10,12 @@ export async function streamClaudeResponse({ systemPrompt, userMessage, maxToken
     throw new Error('NVIDIA_API_KEY environment variable is not set. Get your free key at https://ngc.nvidia.com/');
   }
 
+  // Use llama-3.1-70b which is available on NVIDIA NIM
+  const model = 'meta/llama-3.1-70b-instruct';
+  
   // Create a mock stream that wraps the fetch call
   const stream = {
     [Symbol.asyncIterator]: async function* () {
-      const model = 'nvidia/llama-3.1-nemotron-70b-instruct';
-      
       const response = await fetch(`${NVIDIA_API_BASE}/chat/completions`, {
         method: 'POST',
         headers: {
