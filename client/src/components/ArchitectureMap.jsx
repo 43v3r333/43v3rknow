@@ -23,7 +23,13 @@ export function ArchitectureMap({ archData }) {
   const [hoveredNode, setHoveredNode] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
-  const { modules = [], data_flows = [], patterns_detected = [], issues = [], entry_points = [] } = archData || {};
+  // Safely destructure with fallbacks
+  const archDataSafe = archData || {};
+  const modules = Array.isArray(archDataSafe.modules) ? archDataSafe.modules : [];
+  const data_flows = Array.isArray(archDataSafe.data_flows) ? archDataSafe.data_flows : [];
+  const patterns_detected = Array.isArray(archDataSafe.patterns_detected) ? archDataSafe.patterns_detected : [];
+  const issues = Array.isArray(archDataSafe.issues) ? archDataSafe.issues : [];
+  const entry_points = Array.isArray(archDataSafe.entry_points) ? archDataSafe.entry_points : [];
 
   // Calculate node positions based on type (tiered layout)
   const nodePositions = useMemo(() => {
@@ -54,6 +60,7 @@ export function ArchitectureMap({ archData }) {
     tierOrder.forEach((tier) => {
       const nodes = tiers[tier];
       nodes.forEach((node, idx) => {
+        if (!node?.name) return; // Skip nodes without name
         const totalWidth = Math.min(nodes.length * 160, 800);
         const startX = (800 - totalWidth) / 2;
         positions[node.name] = {
@@ -75,9 +82,11 @@ export function ArchitectureMap({ archData }) {
 
     // First pass: identify all imports
     modules.forEach((mod) => {
+      if (!mod?.name) return;
       (mod.imports_from || []).forEach((imported) => {
+        if (!imported || typeof imported !== 'string') return;
         const targetModule = modules.find(m => 
-          m.name === imported || m.exports?.includes(imported)
+          m?.name === imported || (m?.exports && Array.isArray(m.exports) && m.exports.includes(imported))
         );
         if (targetModule && positions[mod.name] && positions[targetModule.name]) {
           edgeList.push({
@@ -154,7 +163,10 @@ export function ArchitectureMap({ archData }) {
     const isGodObject = (node.imports_from || []).length >= 5;
     const isHovered = hoveredNode === name;
     const color = TYPE_COLORS[pos.type] || TYPE_COLORS.utility;
-    const hasIssue = issues.some(i => i.toLowerCase().includes(name.toLowerCase()));
+    const hasIssue = issues.some(i => {
+      const issueText = typeof i === 'object' ? (i.description || '') : String(i);
+      return issueText.toLowerCase().includes(name.toLowerCase());
+    });
 
     return (
       <g
@@ -269,7 +281,7 @@ export function ArchitectureMap({ archData }) {
                 <ul className="mt-1 space-y-1">
                   {patterns_detected.map((pattern, idx) => (
                     <li key={idx} className="font-mono text-xs text-gray-400">
-                      • {pattern}
+                      • {typeof pattern === 'object' && pattern.name ? pattern.name : String(pattern)}
                     </li>
                   ))}
                 </ul>
@@ -284,7 +296,7 @@ export function ArchitectureMap({ archData }) {
                 <ul className="mt-1 space-y-1">
                   {issues.map((issue, idx) => (
                     <li key={idx} className="font-mono text-xs text-red-300">
-                      • {issue}
+                      • {typeof issue === 'object' && issue.description ? issue.description : String(issue)}
                     </li>
                   ))}
                 </ul>
@@ -304,9 +316,9 @@ export function ArchitectureMap({ archData }) {
             {hoveredNode}
           </p>
           <p className="font-mono text-xs text-gray-500 mt-1">
-            {TYPE_LABELS[nodePositions[hoveredNode].type]}
+            {TYPE_LABELS[nodePositions[hoveredNode]?.type] || 'Unknown'}
           </p>
-          {nodePositions[hoveredNode].node.responsibilities?.length > 0 && (
+          {nodePositions[hoveredNode]?.node?.responsibilities?.length > 0 && (
             <div className="mt-2">
               <span className="font-mono text-xs text-gray-500 uppercase tracking-wider">
                 Responsibilities
@@ -314,7 +326,7 @@ export function ArchitectureMap({ archData }) {
               <ul className="mt-1 space-y-0.5">
                 {nodePositions[hoveredNode].node.responsibilities.map((r, idx) => (
                   <li key={idx} className="font-mono text-xs text-gray-400">
-                    • {r}
+                    • {typeof r === 'object' && r.name ? r.name : String(r)}
                   </li>
                 ))}
               </ul>
