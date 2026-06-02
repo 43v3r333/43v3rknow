@@ -42,6 +42,8 @@ cd client && npm install
 npm run dev
 ```
 
+export NVIDIA_API_KEY="your-key-here"
+
 The frontend runs on port 5173, backend on port 3000.
 
 ## Usage
