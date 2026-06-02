@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Command, Zap } from 'lucide-react';
 import { CodeInput } from './components/CodeInput';
 import { DebtDashboard } from './components/DebtDashboard';
@@ -11,6 +11,43 @@ import { SessionSidebar } from './components/SessionSidebar';
 import { useStream } from './hooks/useStream';
 import { useSession } from './hooks/useSession';
 
+// Resizable Handle Component
+function ResizeHandle({ direction = 'horizontal', onResize, className = '' }) {
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+    
+    const startPos = direction === 'horizontal' ? e.clientX : e.clientY;
+    
+    const handleMouseMove = (moveEvent) => {
+      const currentPos = direction === 'horizontal' ? moveEvent.clientX : moveEvent.clientY;
+      const delta = currentPos - startPos;
+      onResize(delta);
+    };
+    
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+  
+  return (
+    <div
+      className={`${direction === 'horizontal' 
+        ? 'w-1 cursor-col-resize hover:bg-accent-amber' 
+        : 'h-1 cursor-row-resize hover:bg-accent-amber'
+      } bg-border-dark transition-colors ${isDragging ? 'bg-accent-amber' : ''} ${className}`}
+      onMouseDown={handleMouseDown}
+    />
+  );
+}
+
 function App() {
   const [code, setCode] = useState('');
   const [activeTab, setActiveTab] = useState('debt');
@@ -22,6 +59,19 @@ function App() {
   
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
+  
+  // Panel sizes (in pixels or percentages)
+  const [sidebarWidth, setSidebarWidth] = useState(260); // Session sidebar
+  const [codeInputHeight, setCodeInputHeight] = useState(280); // Code input section
+  const [leftPanelWidth, setLeftPanelWidth] = useState(480); // Left column (code + debt)
+  
+  // Min/max sizes
+  const MIN_SIDEBAR = 150;
+  const MAX_SIDEBAR = 400;
+  const MIN_CODE_INPUT = 100;
+  const MAX_CODE_INPUT = 500;
+  const MIN_LEFT_PANEL = 300;
+  const MAX_LEFT_PANEL = 800;
   
   const { isStreaming, streamText, error, startStream, stopStream } = useStream();
   const { sessions, currentSession, saveSession, loadSession, clearAllSessions } = useSession();
@@ -109,7 +159,6 @@ function App() {
       }
       
       const { mode, setter } = analyses[currentIndex];
-      const isFirst = currentIndex === 0;
       
       startStream(mode, codeContent, language, (fullText) => {
         try {
@@ -121,14 +170,14 @@ function App() {
           console.error(`Failed to parse ${mode} response`);
         }
         
-        // Move to next analysis
+        // Move to next analysis after a delay
         currentIndex++;
-        runNextAnalysis();
-      }, !isFirst); // Don't append on first analysis
+        setTimeout(runNextAnalysis, 500);
+      });
     };
     
     runNextAnalysis();
-  }, [startStream, saveSession, debtData, archData, docsData, refactorData]);
+  }, [startStream, saveSession]);
 
   const handleCommand = useCallback((cmdId) => {
     if (!code.trim()) {
@@ -377,62 +426,74 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - Resizable Panels */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Session Sidebar */}
-        <aside className="w-64 border-r border-border-dark bg-[#080808]">
-          <SessionSidebar
-            sessions={sessions}
-            currentSession={currentSession}
-            onLoadSession={handleLoadSession}
-            onClearAll={clearAllSessions}
-          />
-        </aside>
+        {/* Session Sidebar - Resizable */}
+        <div style={{ width: sidebarWidth, minWidth: MIN_SIDEBAR, maxWidth: MAX_SIDEBAR }} className="flex-shrink-0">
+          <aside className="h-full border-r border-border-dark bg-[#080808]">
+            <SessionSidebar
+              sessions={sessions}
+              currentSession={currentSession}
+              onLoadSession={handleLoadSession}
+              onClearAll={clearAllSessions}
+            />
+          </aside>
+        </div>
+        
+        <ResizeHandle 
+          direction="horizontal" 
+          onResize={(delta) => {
+            const newWidth = Math.max(MIN_SIDEBAR, Math.min(MAX_SIDEBAR, sidebarWidth + delta));
+            setSidebarWidth(newWidth);
+          }} 
+        />
 
-        {/* Left Column - Code Input & Debt Dashboard */}
-        <div className="w-[480px] flex flex-col border-r border-border-dark">
-          {/* Code Input */}
-          <div className="h-80 border-b border-border-dark">
+        {/* Left Column - Code Input & Debt Dashboard - Resizable */}
+        <div style={{ width: leftPanelWidth, minWidth: MIN_LEFT_PANEL, maxWidth: MAX_LEFT_PANEL }} className="flex-shrink-0 flex flex-col border-r border-border-dark">
+          {/* Code Input - Resizable height */}
+          <div style={{ height: codeInputHeight, minHeight: MIN_CODE_INPUT, maxHeight: MAX_CODE_INPUT }} className="flex-shrink-0 border-b border-border-dark">
             <CodeInput
               onSubmit={handleSubmit}
               code={code}
               setCode={setCode}
             />
           </div>
+          
+          <ResizeHandle 
+            direction="vertical" 
+            onResize={(delta) => {
+              const newHeight = Math.max(MIN_CODE_INPUT, Math.min(MAX_CODE_INPUT, codeInputHeight + delta));
+              setCodeInputHeight(newHeight);
+            }} 
+          />
 
           {/* Debt Dashboard */}
           <div className="flex-1 overflow-hidden">
-            {activeTab === 'debt' && (
-              <DebtDashboard debtData={debtData} />
-            )}
+            <DebtDashboard debtData={debtData} />
           </div>
         </div>
+        
+        <ResizeHandle 
+          direction="horizontal" 
+          onResize={(delta) => {
+            const newWidth = Math.max(MIN_LEFT_PANEL, Math.min(MAX_LEFT_PANEL, leftPanelWidth - delta));
+            setLeftPanelWidth(newWidth);
+          }} 
+        />
 
         {/* Right Column - Analysis Panels */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {activeTab === 'arch' && (
-            <ArchitectureMap archData={archData} />
-          )}
-          {activeTab === 'docs' && (
-            <DocPreview docsData={docsData} />
-          )}
-          {activeTab === 'refactors' && (
-            <DiffViewer refactors={refactorData?.refactors} />
-          )}
-          {activeTab === 'analysis' && (
-            <AnalysisPanel 
-              analysisText={streamText} 
-              isStreaming={isStreaming} 
-            />
-          )}
-          
-          {/* Default to analysis if no specific tab selected */}
-          {!['arch', 'docs', 'refactors', 'analysis'].includes(activeTab) && (
-            <AnalysisPanel 
-              analysisText={streamText} 
-              isStreaming={isStreaming} 
-            />
-          )}
+          <div className="flex-1 overflow-hidden">
+            {activeTab === 'arch' && <ArchitectureMap archData={archData} />}
+            {activeTab === 'docs' && <DocPreview docsData={docsData} />}
+            {activeTab === 'refactors' && <DiffViewer refactors={refactorData?.refactors} />}
+            {(activeTab === 'debt' || activeTab === 'analysis') && (
+              <AnalysisPanel 
+                analysisText={streamText} 
+                isStreaming={isStreaming} 
+              />
+            )}
+          </div>
         </div>
       </div>
 

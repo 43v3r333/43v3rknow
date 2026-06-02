@@ -119,12 +119,12 @@ export function CodeInput({ onSubmit, code, setCode }) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Tab Bar */}
-      <div className="flex border-b border-border-dark">
+      <div className="flex border-b border-border-dark shrink-0">
         <button
           onClick={() => setActiveTab('paste')}
-          className={`px-4 py-3 font-mono text-sm uppercase tracking-wider border-b-2 transition-colors ${
+          className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border-b-2 transition-colors ${
             activeTab === 'paste' 
               ? 'border-accent-amber text-text-light' 
               : 'border-transparent text-gray-500 hover:text-text-light'
@@ -134,7 +134,7 @@ export function CodeInput({ onSubmit, code, setCode }) {
         </button>
         <button
           onClick={() => setActiveTab('upload')}
-          className={`px-4 py-3 font-mono text-sm uppercase tracking-wider border-b-2 transition-colors ${
+          className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border-b-2 transition-colors ${
             activeTab === 'upload' 
               ? 'border-accent-amber text-text-light' 
               : 'border-transparent text-gray-500 hover:text-text-light'
@@ -144,7 +144,7 @@ export function CodeInput({ onSubmit, code, setCode }) {
         </button>
         <button
           onClick={() => setActiveTab('github')}
-          className={`px-4 py-3 font-mono text-sm uppercase tracking-wider border-b-2 transition-colors ${
+          className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border-b-2 transition-colors ${
             activeTab === 'github' 
               ? 'border-accent-amber text-text-light' 
               : 'border-transparent text-gray-500 hover:text-text-light'
@@ -155,21 +155,21 @@ export function CodeInput({ onSubmit, code, setCode }) {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-3">
         {activeTab === 'paste' && (
           <div className="flex flex-col h-full">
             <textarea
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="Paste your code here..."
-              className="code-input flex-1 w-full bg-bg-dark border border-border-dark p-4 text-text-light resize-none focus:border-accent-amber"
+              className="code-input flex-1 w-full bg-bg-dark border border-border-dark p-3 text-text-light resize-none focus:border-accent-amber text-sm"
               spellCheck="false"
             />
             
             {/* Code Preview */}
             {code && (
-              <div className="mt-4 border border-border-dark">
-                <div className="flex items-center justify-between px-3 py-2 bg-[#1a1a1a] border-b border-border-dark">
+              <div className="mt-3 border border-border-dark shrink-0">
+                <div className="flex items-center justify-between px-2 py-1.5 bg-[#1a1a1a] border-b border-border-dark">
                   <span className="font-mono text-xs text-gray-400 uppercase tracking-wider">
                     Preview
                   </span>
@@ -181,7 +181,7 @@ export function CodeInput({ onSubmit, code, setCode }) {
                     {language.toUpperCase()}
                   </span>
                 </div>
-                <div className="max-h-48 overflow-auto">
+                <div className="max-h-40 overflow-auto">
                   {renderPrismCode()}
                 </div>
               </div>
@@ -196,18 +196,18 @@ export function CodeInput({ onSubmit, code, setCode }) {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed p-8 text-center cursor-pointer transition-colors ${
+              className={`border-2 border-dashed p-6 text-center cursor-pointer transition-colors shrink-0 ${
                 isDragging 
                   ? 'border-accent-amber bg-accent-amber/5' 
                   : 'border-border-dark hover:border-gray-500'
               }`}
             >
-              <Upload className="w-8 h-8 mx-auto mb-3 text-gray-500" />
-              <p className="font-mono text-sm text-gray-400">
+              <Upload className="w-6 h-6 mx-auto mb-2 text-gray-500" />
+              <p className="font-mono text-xs text-gray-400">
                 Drop files here or click to upload
               </p>
-              <p className="font-mono text-xs text-gray-600 mt-2">
-                Supports: {ALLOWED_EXTENSIONS.join(' ')}
+              <p className="font-mono text-xs text-gray-600 mt-1">
+                {ALLOWED_EXTENSIONS.join(' ')}
               </p>
             </div>
             
@@ -221,7 +221,7 @@ export function CodeInput({ onSubmit, code, setCode }) {
             />
 
             {uploadedFiles.length > 0 && (
-              <div className="mt-4 flex-1">
+              <div className="mt-3 flex-1 overflow-hidden">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-mono text-xs text-gray-400 uppercase tracking-wider">
                     Files ({uploadedFiles.length})
@@ -231,12 +231,12 @@ export function CodeInput({ onSubmit, code, setCode }) {
                   </span>
                 </div>
                 
-                <div className="space-y-2 max-h-60 overflow-auto">
+                <div className="space-y-1 max-h-48 overflow-auto">
                   {uploadedFiles.map((file, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 bg-[#111] border border-border-dark">
                       <div className="flex items-center gap-2">
                         <FileCode className="w-4 h-4 text-accent-amber" />
-                        <span className="font-mono text-sm">{file.name}</span>
+                        <span className="font-mono text-xs">{file.name}</span>
                       </div>
                       <span className="font-mono text-xs text-gray-500">
                         {(file.size / 1024).toFixed(1)} KB
@@ -258,32 +258,32 @@ export function CodeInput({ onSubmit, code, setCode }) {
 
         {activeTab === 'github' && (
           <div className="flex flex-col h-full">
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-3 shrink-0">
               <input
                 type="text"
                 value={githubUrl}
                 onChange={(e) => setGithubUrl(e.target.value)}
                 placeholder="owner/repo or https://github.com/owner/repo"
-                className="flex-1 bg-bg-dark border border-border-dark px-3 py-2 font-mono text-sm text-text-light focus:border-accent-amber"
+                className="flex-1 bg-bg-dark border border-border-dark px-3 py-2 font-mono text-xs text-text-light focus:border-accent-amber"
               />
               <button
                 onClick={handleGithubFetch}
                 disabled={isLoading || !githubUrl.trim()}
-                className="px-4 py-2 bg-accent-amber text-bg-dark font-mono text-sm font-medium hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 bg-accent-amber text-bg-dark font-mono text-xs font-medium hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Loading...' : 'Fetch'}
               </button>
             </div>
 
             {githubError && (
-              <div className="flex items-center gap-2 p-3 bg-red-900/20 border border-red-800 mb-4">
-                <AlertCircle className="w-4 h-4 text-red-400" />
-                <p className="font-mono text-sm text-red-400">{githubError}</p>
+              <div className="flex items-center gap-2 p-2 bg-red-900/20 border border-red-800 mb-3 shrink-0">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <p className="font-mono text-xs text-red-400">{githubError}</p>
               </div>
             )}
 
             {files.length > 0 && (
-              <div className="flex-1">
+              <div className="flex-1 overflow-hidden">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-mono text-xs text-gray-400 uppercase tracking-wider">
                     Files ({files.length})
@@ -293,11 +293,11 @@ export function CodeInput({ onSubmit, code, setCode }) {
                   </span>
                 </div>
                 
-                <div className="space-y-1 max-h-64 overflow-auto">
+                <div className="space-y-1 max-h-56 overflow-auto">
                   {files.slice(0, 100).map((file) => (
                     <label
                       key={file.path}
-                      className="flex items-center gap-2 p-2 hover:bg-[#1a1a1a] cursor-pointer"
+                      className="flex items-center gap-2 p-1.5 hover:bg-[#1a1a1a] cursor-pointer"
                     >
                       <input
                         type="checkbox"
@@ -305,8 +305,8 @@ export function CodeInput({ onSubmit, code, setCode }) {
                         onChange={() => toggleFileSelection(file.path)}
                         className="accent-accent-amber"
                       />
-                      <FileCode className="w-4 h-4 text-gray-500" />
-                      <span className="font-mono text-sm text-gray-300 truncate">
+                      <FileCode className="w-4 h-4 text-gray-500 shrink-0" />
+                      <span className="font-mono text-xs text-gray-300 truncate">
                         {file.path}
                       </span>
                     </label>
@@ -325,9 +325,9 @@ export function CodeInput({ onSubmit, code, setCode }) {
       </div>
 
       {/* Footer Stats & Submit */}
-      <div className="border-t border-border-dark p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-4">
+      <div className="border-t border-border-dark p-3 shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
             <span className="font-mono text-xs text-gray-500">
               {charCount.toLocaleString()} chars
             </span>
@@ -344,7 +344,7 @@ export function CodeInput({ onSubmit, code, setCode }) {
           {isTooLarge && (
             <span className="font-mono text-xs text-amber-400 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />
-              Over 100k chars - consider selecting fewer files
+              Over 100k
             </span>
           )}
         </div>
@@ -352,7 +352,7 @@ export function CodeInput({ onSubmit, code, setCode }) {
         <button
           onClick={() => onSubmit(getConcatenatedCode(), language, getSourceName())}
           disabled={!code.trim() && uploadedFiles.length === 0 && selectedFiles.size === 0}
-          className="w-full py-3 bg-accent-amber text-bg-dark font-mono text-sm font-semibold uppercase tracking-wider hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-2 bg-accent-amber text-bg-dark font-mono text-xs font-semibold uppercase tracking-wider hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Analyse
         </button>
