@@ -154,7 +154,7 @@ export function ArchitectureMap({ archData }) {
     const isGodObject = (node.imports_from || []).length >= 5;
     const isHovered = hoveredNode === name;
     const color = TYPE_COLORS[pos.type] || TYPE_COLORS.utility;
-    const hasIssue = issues.some(i => i.toLowerCase().includes(name.toLowerCase()));
+    const hasIssue = issues.some(i => typeof i === 'string' && i.toLowerCase().includes(String(name).toLowerCase()));
 
     return (
       <g

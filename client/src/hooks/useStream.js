@@ -5,13 +5,14 @@ export function useStream() {
   const [streamText, setStreamText] = useState('');
   const [error, setError] = useState(null);
   const abortControllerRef = useRef(null);
+  const fullTextRef = useRef('');
 
-  const startStream = useCallback(async (mode, code, language, onComplete, append = false) => {
-    if (!append) {
-      setStreamText('');
-    }
-    setIsStreaming(true);
+  const startStream = useCallback(async (mode, code, language, onComplete) => {
+    // Clear previous state
+    setStreamText('');
     setError(null);
+    setIsStreaming(true);
+    fullTextRef.current = '';
     
     abortControllerRef.current = new AbortController();
 
@@ -30,7 +31,6 @@ export function useStream() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let fullText = append ? streamText : '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -44,8 +44,8 @@ export function useStream() {
             const data = line.slice(6);
             if (data === '[DONE]') {
               setIsStreaming(false);
-              if (onComplete) onComplete(fullText);
-              return fullText;
+              if (onComplete) onComplete(fullTextRef.current);
+              return fullTextRef.current;
             }
             
             try {
@@ -54,8 +54,8 @@ export function useStream() {
                 throw new Error(parsed.error);
               }
               if (parsed.text) {
-                fullText += parsed.text;
-                setStreamText(fullText);
+                fullTextRef.current += parsed.text;
+                setStreamText(fullTextRef.current);
               }
             } catch (e) {
               // Skip invalid JSON chunks
@@ -72,7 +72,7 @@ export function useStream() {
       setIsStreaming(false);
       return null;
     }
-  }, [streamText]);
+  }, []);
 
   const stopStream = useCallback(() => {
     if (abortControllerRef.current) {
