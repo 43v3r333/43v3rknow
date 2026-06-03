@@ -134,8 +134,7 @@ function App() {
     setRefactorData(null);
     setDocsData(null);
     
-    // Sequential analysis runner using callbacks
-    let currentIndex = 0;
+    // Run all analyses in PARALLEL for maximum speed
     const analyses = [
       { mode: 'debt', setter: setDebtData },
       { mode: 'map', setter: setArchData },
@@ -143,40 +142,44 @@ function App() {
       { mode: 'refactor', setter: setRefactorData }
     ];
     
-    const runNextAnalysis = () => {
-      if (currentIndex >= analyses.length) {
-        // All analyses complete - save session
-        saveSession({
-          source,
-          language,
-          debtScore: debtData?.debt_score,
-          summary: debtData?.summary,
-          results: { debt: debtData, arch: archData, docs: docsData, refactor: refactorData },
-          code: codeContent,
-          mode: 'debt'
-        });
-        return;
-      }
-      
-      const { mode, setter } = analyses[currentIndex];
-      
-      startStream(mode, codeContent, language, (fullText) => {
-        try {
-          let cleaned = fullText.trim();
-          cleaned = cleaned.replace(/^```json\n?/, '').replace(/^```\n?/, '').replace(/\n?```$/, '');
-          const parsed = JSON.parse(cleaned);
-          setter(parsed);
-        } catch (e) {
-          console.error(`Failed to parse ${mode} response`);
-        }
-        
-        // Move to next analysis after a delay
-        currentIndex++;
-        setTimeout(runNextAnalysis, 500);
-      });
+    // Track which data was set for session save
+    let debtResult = null, archResult = null, docsResult = null, refactorResult = null;
+    const setters = { 
+      debt: (d) => { debtResult = d; setDebtData(d); }, 
+      map: (d) => { archResult = d; setArchData(d); },
+      docs: (d) => { docsResult = d; setDocsData(d); },
+      refactor: (d) => { refactorResult = d; setRefactorData(d); } 
     };
     
-    runNextAnalysis();
+    // Start all analyses simultaneously
+    const analysisPromises = analyses.map(({ mode, setter }, index) => {
+      return new Promise((resolve) => {
+        startStream(mode, codeContent, language, (fullText) => {
+          try {
+            let cleaned = fullText.trim();
+            cleaned = cleaned.replace(/^```json\n?/, '').replace(/^```\n?/, '').replace(/\n?```$/, '');
+            const parsed = JSON.parse(cleaned);
+            setters[mode](parsed);
+          } catch (e) {
+            console.error(`Failed to parse ${mode} response`);
+          }
+          resolve();
+        });
+      });
+    });
+    
+    // Wait for all to complete, then save session
+    Promise.all(analysisPromises).then(() => {
+      saveSession({
+        source,
+        language,
+        debtScore: debtResult?.debt_score,
+        summary: debtResult?.summary,
+        results: { debt: debtResult, arch: archResult, docs: docsResult, refactor: refactorResult },
+        code: codeContent,
+        mode: 'debt'
+      });
+    });
   }, [startStream, saveSession]);
 
   const handleCommand = useCallback((cmdId) => {
