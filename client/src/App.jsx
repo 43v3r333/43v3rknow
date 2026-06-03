@@ -110,7 +110,7 @@ function App() {
       
       // Determine what type of data this is based on structure
       if ('debt_score' in parsed) {
-        setDebtData(parsed);
+        setDebtData(result);
       } else if ('modules' in parsed) {
         setArchData(parsed);
       } else if ('refactors' in parsed) {
@@ -204,11 +204,11 @@ function App() {
         setActiveTab('analysis');
         break;
       case 'debt':
-        startStream('debt', code, detectLanguage(code), (fullText) => {
+        startStream('debt', code, detectLanguage(code), (result) => {
           try {
-            let cleaned = fullText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
+            let cleaned = String(result).trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
             const parsed = JSON.parse(cleaned);
-            setDebtData(parsed);
+            setDebtData(result);
             saveSession({
               source: sourceName,
               language: detectLanguage(code),
@@ -225,9 +225,9 @@ function App() {
         setActiveTab('debt');
         break;
       case 'docs':
-        startStream('docs', code, detectLanguage(code), (fullText) => {
+        startStream('docs', code, detectLanguage(code), (result) => {
           try {
-            let cleaned = fullText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
+            let cleaned = String(result).trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
             const parsed = JSON.parse(cleaned);
             setDocsData(parsed);
           } catch (e) {
@@ -237,9 +237,9 @@ function App() {
         setActiveTab('docs');
         break;
       case 'refactor':
-        startStream('refactor', code, detectLanguage(code), (fullText) => {
+        startStream('refactor', code, detectLanguage(code), (result) => {
           try {
-            let cleaned = fullText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
+            let cleaned = String(result).trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
             const parsed = JSON.parse(cleaned);
             setRefactorData(parsed);
           } catch (e) {
@@ -249,9 +249,9 @@ function App() {
         setActiveTab('refactors');
         break;
       case 'map':
-        startStream('map', code, detectLanguage(code), (fullText) => {
+        startStream('map', code, detectLanguage(code), (result) => {
           try {
-            let cleaned = fullText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
+            let cleaned = String(result).trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
             const parsed = JSON.parse(cleaned);
             setArchData(parsed);
           } catch (e) {
