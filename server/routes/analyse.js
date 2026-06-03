@@ -16,81 +16,60 @@ const SYSTEM_PROMPTS = {
 };
 
 const USER_PROMPTS = {
-  explain: (code, language) => `Explain the following ${language || 'code'} in detail. Return ONLY valid JSON. NO markdown. NO code fences. Start with { and end with }.
+  explain: (code, language) => `Explain the following ${language || 'code'} in detail. Return ONLY valid JSON starting with "{" and ending with "}". No markdown, no text before or after JSON.
 
-Response format:
+Output this exact JSON structure (fill in the values):
 {
-  "summary": "One paragraph plain-English explanation",
-  "purpose": "What this code is trying to accomplish",
-  "how_it_works": ["Step 1", "Step 2"],
-  "key_concepts": [{ "term": "", "explanation": "" }],
-  "dependencies": ["detected imports"],
-  "entry_points": ["main functions or exports"],
-  "warnings": ["ambiguities or unclear areas"]
+  "summary": "one sentence summary",
+  "purpose": "what this does",
+  "how_it_works": ["step1", "step2"],
+  "key_concepts": [{"term": "x", "explanation": "y"}],
+  "dependencies": ["import1", "import2"],
+  "entry_points": ["main1", "main2"],
+  "warnings": ["warn1"]
 }
 
 CODE:
 ${code}`,
 
-  debt: (code, language) => `Perform a technical debt audit on the following ${language || 'code'}. Return ONLY valid JSON. NO markdown. NO code fences. Start with { and end with }.
+  debt: (code, language) => `Analyze this ${language || 'code'} for technical debt. Return ONLY valid JSON starting with "{" and ending with "}". No markdown, no text.
 
-Response format (debt_score is 0-100, 0=pristine, 100=catastrophic):
+Output this exact structure:
 {
   "debt_score": 0,
-  "score_rationale": "",
   "findings": [
     {
       "id": "D001",
       "severity": "critical|moderate|low",
       "category": "security|performance|maintainability|reliability|style",
-      "title": "",
-      "description": "",
-      "location": "line X or function Y",
-      "impact": "",
-      "fix": "Concrete one-sentence action"
+      "title": "short title",
+      "description": "one sentence description",
+      "location": "where",
+      "impact": "why it matters",
+      "fix": "how to fix"
     }
   ],
-  "summary": "Overall assessment"
+  "summary": "overall assessment"
 }
+
+debt_score: 0=perfect, 100=terrible. Include 3-5 key findings.
 
 CODE:
 ${code}`,
 
-  docs: (code, language) => `Generate documentation for the following ${language || 'code'}. Return ONLY valid JSON. NO markdown. NO code fences. Start with { and end with }.
+  docs: (code, language) => `Document this ${language || 'code'}. Return ONLY valid JSON starting with "{" and ending with "}". No markdown, no text.
 
-Response format:
+Output this exact structure:
 {
-  "file_summary": "",
+  "file_summary": "what this file does",
   "functions": [
     {
-      "name": "",
-      "signature": "",
-      "description": "",
-      "params": [{ "name": "", "type": "", "description": "" }],
-      "returns": { "type": "", "description": "" },
-      "example": "",
-      "docblock": "Full JSDoc or docstring ready to paste"
-    }
-  ],
-  "readme_section": "Markdown-formatted README section for this module"
-}
-
-CODE:
-${code}`,
-
-  refactor: (code, language) => `Suggest refactors for the following ${language || 'code'}. Return ONLY valid JSON. NO markdown. NO code fences. Start with { and end with }.
-
-Response format:
-{
-  "summary": "",
-  "refactors": [
-    {
-      "id": "R001",
-      "title": "",
-      "rationale": "",
-      "before": "code string",
-      "after": "code string",
-      "impact": ""
+      "name": "functionName",
+      "signature": "params and return type",
+      "description": "what it does",
+      "params": [{"name": "x", "type": "string", "description": "param desc"}],
+      "returns": {"type": "void", "description": "return desc"},
+      "docblock": "complete JSDoc ready to use"
     }
   ]
 }
@@ -98,23 +77,39 @@ Response format:
 CODE:
 ${code}`,
 
-  map: (code, language) => `Analyze the architecture of the following ${language || 'code'} codebase. Return ONLY valid JSON. NO markdown. NO code fences. Start with { and end with }.
+  refactor: (code, language) => `Suggest refactors for this ${language || 'code'}. Return ONLY valid JSON starting with "{" and ending with "}". No markdown, no text.
 
-Response format:
+Output this exact structure:
+{
+  "summary": "overall assessment",
+  "refactors": [
+    {
+      "id": "R001",
+      "title": "short title",
+      "before": "code before",
+      "after": "code after",
+      "impact": "why this helps"
+    }
+  ]
+}
+
+CODE:
+${code}`,
+
+  map: (code, language) => `Map the architecture of this ${language || 'code'}. Return ONLY valid JSON starting with "{" and ending with "}". No markdown, no text.
+
+Output this exact structure:
 {
   "modules": [
     {
-      "name": "",
-      "type": "component|service|utility|model|config|entry",
-      "responsibilities": [],
-      "exports": [],
-      "imports_from": []
+      "name": "ModuleName",
+      "type": "component|service|utility|model",
+      "exports": ["export1", "export2"],
+      "imports": ["import1", "import2"]
     }
   ],
-  "data_flows": [{ "from": "", "to": "", "description": "" }],
-  "patterns_detected": [],
-  "issues": ["Circular dependency between X and Y"],
-  "entry_points": []
+  "entry_points": ["main modules"],
+  "issues": ["architecture issues if any"]
 }
 
 CODE:
