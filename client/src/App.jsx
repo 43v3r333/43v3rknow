@@ -158,14 +158,20 @@ function App() {
     // Start all analyses simultaneously
     const analysisPromises = analyses.map(({ mode, setter }, index) => {
       return new Promise((resolve) => {
-        startStream(mode, codeContent, language, (fullText) => {
-          try {
-            let cleaned = fullText.trim();
-            cleaned = cleaned.replace(/^```json\n?/, '').replace(/^```\n?/, '').replace(/\n?```$/, '');
-            const parsed = JSON.parse(cleaned);
-            setters[mode](parsed);
-          } catch (e) {
-            console.error(`Failed to parse ${mode} response`);
+        startStream(mode, codeContent, language, (result) => {
+          // Result is already parsed JSON from server's complete event
+          if (result && typeof result === 'object') {
+            setters[mode](result);
+          } else {
+            // Fallback: parse string (shouldn't happen with new server)
+            try {
+              let cleaned = String(result).trim();
+              cleaned = cleaned.replace(/^```json\n?/, '').replace(/^```\n?/, '').replace(/\n?```$/, '');
+              const parsed = JSON.parse(cleaned);
+              setters[mode](parsed);
+            } catch (e) {
+              console.error(`Failed to parse ${mode} response`);
+            }
           }
           resolve();
         });
