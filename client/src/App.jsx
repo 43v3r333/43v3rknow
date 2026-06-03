@@ -205,32 +205,25 @@ function App() {
         break;
       case 'debt':
         startStream('debt', code, detectLanguage(code), (result) => {
-          try {
-            let cleaned = String(result).trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
-            const parsed = JSON.parse(cleaned);
+          if (result) {
             setDebtData(result);
             saveSession({
               source: sourceName,
               language: detectLanguage(code),
-              debtScore: parsed.debt_score,
-              summary: parsed.summary,
-              results: { debt: parsed },
+              debtScore: result.debt_score,
+              summary: result.summary,
+              results: { debt: result },
               code,
               mode: 'debt'
             });
-          } catch (e) {
-            console.error('Failed to parse:', e);
           }
         });
         setActiveTab('debt');
         break;
       case 'docs':
         startStream('docs', code, detectLanguage(code), (result) => {
-          try {
-            let cleaned = String(result).trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
-            const parsed = JSON.parse(cleaned);
-            setDocsData(parsed);
-          } catch (e) {
+          if (result) setDocsData(result);
+        });
             console.error('Failed to parse:', e);
           }
         });
@@ -238,11 +231,8 @@ function App() {
         break;
       case 'refactor':
         startStream('refactor', code, detectLanguage(code), (result) => {
-          try {
-            let cleaned = String(result).trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
-            const parsed = JSON.parse(cleaned);
-            setRefactorData(parsed);
-          } catch (e) {
+          if (result) setRefactorData(result);
+        });
             console.error('Failed to parse:', e);
           }
         });
@@ -250,11 +240,8 @@ function App() {
         break;
       case 'map':
         startStream('map', code, detectLanguage(code), (result) => {
-          try {
-            let cleaned = String(result).trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
-            const parsed = JSON.parse(cleaned);
-            setArchData(parsed);
-          } catch (e) {
+          if (result) setArchData(result);
+        });
             console.error('Failed to parse:', e);
           }
         });
