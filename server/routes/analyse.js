@@ -4,109 +4,45 @@ import { streamClaudeResponse } from '../lib/claudeClient.js';
 const router = express.Router();
 
 const SYSTEM_PROMPTS = {
-  explain: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
-  debt: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
-  docs: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
-  refactor: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
-  map: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`
+  explain: `Return ONLY valid JSON. No markdown. No text. Start with { and end with }.`,
+  debt: `Return ONLY valid JSON. No markdown. No text. Start with { and end with }.`,
+  docs: `Return ONLY valid JSON. No markdown. No text. Start with { and end with }.`,
+  refactor: `Return ONLY valid JSON. No markdown. No text. Start with { and end with }.`,
+  map: `Return ONLY valid JSON. No markdown. No text. Start with { and end with }.`
 };
 
 const USER_PROMPTS = {
-  explain: (code, language) => `Explain the following ${language || 'code'} in detail. Return ONLY valid JSON starting with "{" and ending with "}". No markdown, no text before or after JSON.
+  explain: (code, language) => `Analyze this ${language || 'code'}. Output ONLY this JSON, nothing else:
 
-Output this exact JSON structure (fill in the values):
-{
-  "summary": "one sentence summary",
-  "purpose": "what this does",
-  "how_it_works": ["step1", "step2"],
-  "key_concepts": [{"term": "x", "explanation": "y"}],
-  "dependencies": ["import1", "import2"],
-  "entry_points": ["main1", "main2"],
-  "warnings": ["warn1"]
-}
+{"summary":"brief summary","purpose":"what it does","steps":["step1","step2"],"concepts":[["term","explanation"]],"deps":["import1"],"exports":["export1"]}
 
 CODE:
 ${code}`,
 
-  debt: (code, language) => `Analyze this ${language || 'code'} for technical debt. Return ONLY valid JSON starting with "{" and ending with "}". No markdown, no text.
+  debt: (code, language) => `Audit this ${language || 'code'} for debt. Output ONLY this JSON, nothing else:
 
-Output this exact structure:
-{
-  "debt_score": 0,
-  "findings": [
-    {
-      "id": "D001",
-      "severity": "critical|moderate|low",
-      "category": "security|performance|maintainability|reliability|style",
-      "title": "short title",
-      "description": "one sentence description",
-      "location": "where",
-      "impact": "why it matters",
-      "fix": "how to fix"
-    }
-  ],
-  "summary": "overall assessment"
-}
-
-debt_score: 0=perfect, 100=terrible. Include 3-5 key findings.
+{"debt_score":50,"findings":[{"id":"D001","severity":"moderate","category":"maintainability","title":"short title","description":"desc","location":"loc","impact":"impact","fix":"fix"}],"summary":"summary"}
 
 CODE:
 ${code}`,
 
-  docs: (code, language) => `Document this ${language || 'code'}. Return ONLY valid JSON starting with "{" and ending with "}". No markdown, no text.
+  docs: (code, language) => `Document this ${language || 'code'}. Output ONLY this JSON, nothing else:
 
-Output this exact structure:
-{
-  "file_summary": "what this file does",
-  "functions": [
-    {
-      "name": "functionName",
-      "signature": "params and return type",
-      "description": "what it does",
-      "params": [{"name": "x", "type": "string", "description": "param desc"}],
-      "returns": {"type": "void", "description": "return desc"},
-      "docblock": "complete JSDoc ready to use"
-    }
-  ]
-}
+{"file_summary":"summary","functions":[{"name":"name","signature":"sig","description":"desc","params":[["name","type","desc"]],"returns":["type","desc"]}]}
 
 CODE:
 ${code}`,
 
-  refactor: (code, language) => `Suggest refactors for this ${language || 'code'}. Return ONLY valid JSON starting with "{" and ending with "}". No markdown, no text.
+  refactor: (code, language) => `Refactor this ${language || 'code'}. Output ONLY this JSON, nothing else:
 
-Output this exact structure:
-{
-  "summary": "overall assessment",
-  "refactors": [
-    {
-      "id": "R001",
-      "title": "short title",
-      "before": "code before",
-      "after": "code after",
-      "impact": "why this helps"
-    }
-  ]
-}
+{"summary":"summary","refactors":[{"id":"R001","title":"title","before":"code","after":"code","impact":"impact"}]}
 
 CODE:
 ${code}`,
 
-  map: (code, language) => `Map the architecture of this ${language || 'code'}. Return ONLY valid JSON starting with "{" and ending with "}". No markdown, no text.
+  map: (code, language) => `Map this ${language || 'code'} architecture. Output ONLY this JSON, nothing else:
 
-Output this exact structure:
-{
-  "modules": [
-    {
-      "name": "ModuleName",
-      "type": "component|service|utility|model",
-      "exports": ["export1", "export2"],
-      "imports": ["import1", "import2"]
-    }
-  ],
-  "entry_points": ["main modules"],
-  "issues": ["architecture issues if any"]
-}
+{"modules":[{"name":"name","type":"type","exports":["x"],"imports":["y"]}],"entry_points":["x"],"issues":[]}
 
 CODE:
 ${code}`
@@ -147,54 +83,62 @@ router.post('/', async (req, res) => {
       }
     }
 
-    // Better JSON extraction and validation
     let finalJson = null;
     let parseError = null;
 
     try {
       let cleaned = fullText.trim();
-      cleaned = cleaned.replace(/^```json\s*/i, '');
-      cleaned = cleaned.replace(/^```\s*/i, '');
-      cleaned = cleaned.replace(/\s*```$/i, '');
-      if (cleaned.startsWith('`')) cleaned = cleaned.slice(1);
-      if (cleaned.endsWith('`')) cleaned = cleaned.slice(0, -1);
+      cleaned = cleaned.replace(/```json\s*/gi, '');
+      cleaned = cleaned.replace(/```\s*/gi, '');
+      cleaned = cleaned.replace(/`+/g, '');
+      cleaned = cleaned.trim();
 
       try {
         finalJson = JSON.parse(cleaned);
       } catch {
         const match = cleaned.match(/\{[\s\S]*\}/);
         if (match) {
-          finalJson = JSON.parse(match[0]);
+          try {
+            finalJson = JSON.parse(match[0]);
+          } catch {
+            let fixed = match[0]
+              .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":')
+              .replace(/:\s*'([^']*)'/g, ':"$1"')
+              .replace(/,\s*}/g, '}')
+              .replace(/,\s*]/g, ']');
+            finalJson = JSON.parse(fixed);
+          } catch {
+            parseError = 'Could not parse JSON';
+          }
         }
       }
 
       if (finalJson && mode === 'debt') {
         if (typeof finalJson.debt_score !== 'number') {
-          finalJson.debt_score = finalJson.debt_score || 50;
+          finalJson.debt_score = 50;
         }
         if (!Array.isArray(finalJson.findings)) {
           finalJson.findings = [];
         }
-        finalJson.findings = finalJson.findings.map((f, i) => ({
-          id: f.id || ('D' + String(i + 1).padStart(3, '0')),
-          severity: f.severity || 'moderate',
-          title: f.title || 'Issue found',
-          description: f.description || '',
-          location: f.location || '',
-          impact: f.impact || '',
-          fix: f.fix || '',
-          category: f.category || 'maintainability'
+        finalJson.findings = finalJson.findings.slice(0, 10).map((f, i) => ({
+          id: f.id || 'D' + String(i + 1).padStart(3, '0'),
+          severity: ['critical', 'moderate', 'low'].includes(f.severity) ? f.severity : 'moderate',
+          category: f.category || 'maintainability',
+          title: String(f.title || 'Issue ' + (i + 1)).substring(0, 100),
+          description: String(f.description || '').substring(0, 500),
+          location: String(f.location || '').substring(0, 100),
+          impact: String(f.impact || '').substring(0, 200),
+          fix: String(f.fix || '').substring(0, 200)
         }));
       }
     } catch (e) {
       parseError = e.message;
-      console.error('JSON parse error:', e);
     }
 
     if (finalJson) {
       res.write(`data: ${JSON.stringify({ type: 'complete', mode: mode, data: finalJson })}\n\n`);
     } else {
-      res.write(`data: ${JSON.stringify({ type: 'complete', mode: mode, data: null, error: parseError || 'Parse failed', raw: fullText.slice(0, 200) })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: 'complete', mode: mode, data: null, error: parseError })}\n\n`);
     }
 
     res.write('data: [DONE]\n\n');
