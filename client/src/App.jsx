@@ -55,6 +55,7 @@ function App() {
   const [archData, setArchData] = useState(null);
   const [refactorData, setRefactorData] = useState(null);
   const [docsData, setDocsData] = useState(null);
+  const [explainData, setExplainData] = useState(null);
   const [sourceName, setSourceName] = useState('');
   
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
@@ -133,13 +134,15 @@ function App() {
     setArchData(null);
     setRefactorData(null);
     setDocsData(null);
+    setExplainData(null);
     
     // Run all analyses in PARALLEL for maximum speed
     const analyses = [
       { mode: 'debt', setter: setDebtData },
       { mode: 'map', setter: setArchData },
       { mode: 'docs', setter: setDocsData },
-      { mode: 'refactor', setter: setRefactorData }
+      { mode: 'refactor', setter: setRefactorData },
+      { mode: 'explain', setter: setExplainData }
     ];
     
     // Track which data was set for session save
@@ -148,7 +151,8 @@ function App() {
       debt: (d) => { debtResult = d; setDebtData(d); }, 
       map: (d) => { archResult = d; setArchData(d); },
       docs: (d) => { docsResult = d; setDocsData(d); },
-      refactor: (d) => { refactorResult = d; setRefactorData(d); } 
+      refactor: (d) => { refactorResult = d; setRefactorData(d); },
+      explain: (d) => { explainResult = d; setExplainData(d); } 
     };
     
     // Start all analyses simultaneously
@@ -175,7 +179,7 @@ function App() {
         language,
         debtScore: debtResult?.debt_score,
         summary: debtResult?.summary,
-        results: { debt: debtResult, arch: archResult, docs: docsResult, refactor: refactorResult },
+        results: { debt: debtResult, arch: archResult, docs: docsResult, refactor: refactorResult, explain: explainResult },
         code: codeContent,
         mode: 'debt'
       });
@@ -264,6 +268,7 @@ function App() {
         setArchData(null);
         setRefactorData(null);
         setDocsData(null);
+    setExplainData(null);
         setSourceName('');
         break;
       case 'export':
@@ -333,6 +338,7 @@ function App() {
         if (session.results.arch) setArchData(session.results.arch);
         if (session.results.refactor) setRefactorData(session.results.refactor);
         if (session.results.docs) setDocsData(session.results.docs);
+        if (session.results.explain) setExplainData(session.results.explain);
       }
     }
   };
