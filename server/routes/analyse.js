@@ -151,34 +151,68 @@ router.post('/', async (req, res) => {
       }
     }
 
-    // Send the complete parsed JSON as a structured event at the end
+    // Better JSON extraction and validation
     let finalJson = null;
+    let parseError = null;
+    
     try {
-      // Try to extract and parse the JSON from the response
       let cleaned = fullText.trim();
       
-      // Remove any leading/trailing markdown code blocks
-      if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);
-      else if (cleaned.startsWith('```')) cleaned = cleaned.slice(3);
-      if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);
+      // Remove markdown code blocks (all variations)
+      cleaned = cleaned.replace(/^```json\s*/i, '');
+      cleaned = cleaned.replace(/^```\s*/i, '');
+      cleaned = cleaned.replace(/\s*```$/i, '');
       
-      finalJson = JSON.parse(cleaned.trim());
+      // If still has backticks, remove them
+      if (cleaned.startsWith('`')) cleaned = cleaned.slice(1);
+      if (cleaned.endsWith('`')) cleaned = cleaned.slice(0, -1);
+      
+      // Try direct parse first
+      try {
+        finalJson = JSON.parse(cleaned);
+      } catch {
+        // Try to find JSON object pattern
+        const match = cleaned.match(/\{[\s\S]*\}/);
+        if (match) {
+          finalJson = JSON.parse(match[0]);
+        }
+      }
+      
+      // Validate required fields for debt mode
+      if (finalJson && mode === 'debt') {
+        if (typeof finalJson.debt_score !== 'number') {
+          finalJson.debt_score = finalJson.debt_score || 50;
+        }
+        if (!Array.isArray(finalJson.findings)) {
+          finalJson.findings = [];
+        }
+        // Ensure each finding has required fields
+        finalJson.findings = finalJson.findings.map((f, i) => ({
+          id: f.id || ('D' + String(i + 1).padStart(3, '0')),
+          severity: f.severity || 'moderate',
+          title: f.title || 'Issue found',
+          description: f.description || '',
+          location: f.location || '',
+          impact: f.impact || '',
+          fix: f.fix || '',
+          category: f.category || 'maintainability'
+        }));
+      }
+      
     } catch (e) {
-      console.error('Failed to parse final JSON:', e);
-      // Send partial data even if JSON parsing fails
-      res.write(`data: ${JSON.stringify({ error: 'JSON parse failed', partial: fullText.slice(-500) })}\n\n`);
+      parseError = e.message;
+      console.error('JSON parse error:', e);
     }
 
     // Send the complete structured result
-    res.write(`data: ${JSON.stringify({ 
-      type: 'complete',
-      mode: mode,
-      data: finalJson
-    })}\n\n`);
+    if (finalJson) {
+      res.write(`data: ${JSON.stringify({ type: 'complete', mode: mode, data: finalJson })}\n\n`);
+    } else {
+      res.write(`data: ${JSON.stringify({ type: 'complete', mode: mode, data: null, error: parseError || 'Parse failed', raw: fullText.slice(0, 200) })}\n\n`);
+    }
     
     res.write('data: [DONE]\n\n');
     res.end();
-  } catch (error) {
     console.error('Analysis error:', error);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Analysis failed', message: error.message });
