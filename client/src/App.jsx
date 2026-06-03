@@ -110,7 +110,7 @@ function App() {
       
       // Determine what type of data this is based on structure
       if ('debt_score' in parsed) {
-        setDebtData(parsed);
+        setDebtData(result);
       } else if ('modules' in parsed) {
         setArchData(parsed);
       } else if ('refactors' in parsed) {
@@ -204,57 +204,44 @@ function App() {
         setActiveTab('analysis');
         break;
       case 'debt':
-        startStream('debt', code, detectLanguage(code), (fullText) => {
-          try {
-            let cleaned = fullText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
-            const parsed = JSON.parse(cleaned);
-            setDebtData(parsed);
+        startStream('debt', code, detectLanguage(code), (result) => {
+          if (result) {
+            setDebtData(result);
             saveSession({
               source: sourceName,
               language: detectLanguage(code),
-              debtScore: parsed.debt_score,
-              summary: parsed.summary,
-              results: { debt: parsed },
+              debtScore: result.debt_score,
+              summary: result.summary,
+              results: { debt: result },
               code,
               mode: 'debt'
             });
-          } catch (e) {
-            console.error('Failed to parse:', e);
           }
         });
         setActiveTab('debt');
         break;
       case 'docs':
-        startStream('docs', code, detectLanguage(code), (fullText) => {
-          try {
-            let cleaned = fullText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
-            const parsed = JSON.parse(cleaned);
-            setDocsData(parsed);
-          } catch (e) {
+        startStream('docs', code, detectLanguage(code), (result) => {
+          if (result) setDocsData(result);
+        });
             console.error('Failed to parse:', e);
           }
         });
         setActiveTab('docs');
         break;
       case 'refactor':
-        startStream('refactor', code, detectLanguage(code), (fullText) => {
-          try {
-            let cleaned = fullText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
-            const parsed = JSON.parse(cleaned);
-            setRefactorData(parsed);
-          } catch (e) {
+        startStream('refactor', code, detectLanguage(code), (result) => {
+          if (result) setRefactorData(result);
+        });
             console.error('Failed to parse:', e);
           }
         });
         setActiveTab('refactors');
         break;
       case 'map':
-        startStream('map', code, detectLanguage(code), (fullText) => {
-          try {
-            let cleaned = fullText.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
-            const parsed = JSON.parse(cleaned);
-            setArchData(parsed);
-          } catch (e) {
+        startStream('map', code, detectLanguage(code), (result) => {
+          if (result) setArchData(result);
+        });
             console.error('Failed to parse:', e);
           }
         });
