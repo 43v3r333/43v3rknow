@@ -13,7 +13,7 @@ export function useStream() {
     setError(null);
     setIsStreaming(true);
     fullTextRef.current = '';
-    
+
     abortControllerRef.current = new AbortController();
 
     try {
@@ -44,10 +44,9 @@ export function useStream() {
             const data = line.slice(6);
             if (data === '[DONE]') {
               setIsStreaming(false);
-              if (onComplete) onComplete(fullTextRef.current);
               return fullTextRef.current;
             }
-            
+
             try {
               const parsed = JSON.parse(data);
               if (parsed.error) {
@@ -56,6 +55,10 @@ export function useStream() {
               if (parsed.text) {
                 fullTextRef.current += parsed.text;
                 setStreamText(fullTextRef.current);
+              }
+              // Handle the complete structured event from server - pass parsed data directly
+              if (parsed.type === 'complete' && parsed.data) {
+                if (onComplete) onComplete(parsed.data);
               }
             } catch (e) {
               // Skip invalid JSON chunks

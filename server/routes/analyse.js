@@ -156,6 +156,31 @@ router.post('/', async (req, res) => {
       }
     }
 
+    // Send the complete parsed JSON as a structured event at the end
+    let finalJson = null;
+    try {
+      // Try to extract and parse the JSON from the response
+      let cleaned = fullText.trim();
+      
+      // Remove any leading/trailing markdown code blocks
+      if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);
+      else if (cleaned.startsWith('```')) cleaned = cleaned.slice(3);
+      if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);
+      
+      finalJson = JSON.parse(cleaned.trim());
+    } catch (e) {
+      console.error('Failed to parse final JSON:', e);
+      // Send partial data even if JSON parsing fails
+      res.write(`data: ${JSON.stringify({ error: 'JSON parse failed', partial: fullText.slice(-500) })}\n\n`);
+    }
+
+    // Send the complete structured result
+    res.write(`data: ${JSON.stringify({ 
+      type: 'complete',
+      mode: mode,
+      data: finalJson
+    })}\n\n`);
+    
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (error) {
