@@ -5,13 +5,9 @@ const router = express.Router();
 
 const SYSTEM_PROMPTS = {
   explain: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
-
   debt: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
-
   docs: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
-
   refactor: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
-
   map: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`
 };
 
@@ -143,7 +139,7 @@ router.post('/', async (req, res) => {
     });
 
     let fullText = '';
-    
+
     for await (const chunk of stream) {
       if (chunk.type === 'content_block_delta') {
         fullText += chunk.delta.text;
@@ -154,31 +150,24 @@ router.post('/', async (req, res) => {
     // Better JSON extraction and validation
     let finalJson = null;
     let parseError = null;
-    
+
     try {
       let cleaned = fullText.trim();
-      
-      // Remove markdown code blocks (all variations)
       cleaned = cleaned.replace(/^```json\s*/i, '');
       cleaned = cleaned.replace(/^```\s*/i, '');
       cleaned = cleaned.replace(/\s*```$/i, '');
-      
-      // If still has backticks, remove them
       if (cleaned.startsWith('`')) cleaned = cleaned.slice(1);
       if (cleaned.endsWith('`')) cleaned = cleaned.slice(0, -1);
-      
-      // Try direct parse first
+
       try {
         finalJson = JSON.parse(cleaned);
       } catch {
-        // Try to find JSON object pattern
         const match = cleaned.match(/\{[\s\S]*\}/);
         if (match) {
           finalJson = JSON.parse(match[0]);
         }
       }
-      
-      // Validate required fields for debt mode
+
       if (finalJson && mode === 'debt') {
         if (typeof finalJson.debt_score !== 'number') {
           finalJson.debt_score = finalJson.debt_score || 50;
@@ -186,7 +175,6 @@ router.post('/', async (req, res) => {
         if (!Array.isArray(finalJson.findings)) {
           finalJson.findings = [];
         }
-        // Ensure each finding has required fields
         finalJson.findings = finalJson.findings.map((f, i) => ({
           id: f.id || ('D' + String(i + 1).padStart(3, '0')),
           severity: f.severity || 'moderate',
@@ -198,21 +186,20 @@ router.post('/', async (req, res) => {
           category: f.category || 'maintainability'
         }));
       }
-      
     } catch (e) {
       parseError = e.message;
       console.error('JSON parse error:', e);
     }
 
-    // Send the complete structured result
     if (finalJson) {
       res.write(`data: ${JSON.stringify({ type: 'complete', mode: mode, data: finalJson })}\n\n`);
     } else {
       res.write(`data: ${JSON.stringify({ type: 'complete', mode: mode, data: null, error: parseError || 'Parse failed', raw: fullText.slice(0, 200) })}\n\n`);
     }
-    
+
     res.write('data: [DONE]\n\n');
     res.end();
+  } catch (error) {
     console.error('Analysis error:', error);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Analysis failed', message: error.message });
