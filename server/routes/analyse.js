@@ -48,20 +48,33 @@ router.post('/', async (req, res) => {
 
     // Extract and send final JSON
     let finalJson = null;
+    
     try {
-      // Remove all non-JSON characters
+      // Clean the raw text
       let cleaned = fullText
         .replace(/```json\n?/gi, '')
         .replace(/```\n?/gi, '')
         .replace(/`/g, '')
+        .replace(/\n/g, ' ')
+        .replace(/\s+/g, ' ')
         .trim();
       
-      // Find JSON object
+      // Find JSON boundaries precisely
       const start = cleaned.indexOf('{');
       const end = cleaned.lastIndexOf('}');
+      
       if (start !== -1 && end !== -1 && end > start) {
         cleaned = cleaned.substring(start, end + 1);
         finalJson = JSON.parse(cleaned);
+        
+        // Format/validate based on mode
+        if (mode === 'debt') {
+          finalJson = formatDebtJson(finalJson);
+        } else if (mode === 'explain') {
+          finalJson = formatExplainJson(finalJson);
+        } else if (mode === 'map') {
+          finalJson = formatMapJson(finalJson);
+        }
       }
     } catch (e) {
       console.error('JSON parse error:', e.message);
@@ -80,5 +93,47 @@ router.post('/', async (req, res) => {
     }
   }
 });
+
+// JSON formatters to ensure consistent structure
+function formatDebtJson(data) {
+  return {
+    debt_score: Math.min(100, Math.max(0, Number(data.debt_score) || 50)),
+    findings: (data.findings || []).slice(0, 10).map((f, i) => ({
+      id: f.id || ('D' + String(i + 1).padStart(3, '0')),
+      severity: ['critical', 'moderate', 'low'].includes(f.severity) ? f.severity : 'low',
+      category: f.category || 'maintainability',
+      title: String(f.title || 'Issue ' + (i + 1)).slice(0, 100),
+      description: String(f.description || '').slice(0, 500),
+      location: String(f.location || '').slice(0, 100),
+      impact: String(f.impact || '').slice(0, 200),
+      fix: String(f.fix || '').slice(0, 200)
+    })),
+    summary: String(data.summary || '').slice(0, 500)
+  };
+}
+
+function formatExplainJson(data) {
+  return {
+    summary: String(data.summary || '').slice(0, 300),
+    purpose: String(data.purpose || '').slice(0, 300),
+    steps: Array.isArray(data.steps) ? data.steps.slice(0, 10) : [],
+    concepts: Array.isArray(data.concepts) ? data.concepts.slice(0, 10) : [],
+    deps: Array.isArray(data.deps) ? data.deps.slice(0, 20) : [],
+    exports: Array.isArray(data.exports) ? data.exports.slice(0, 20) : []
+  };
+}
+
+function formatMapJson(data) {
+  return {
+    modules: (data.modules || []).slice(0, 50).map(m => ({
+      name: String(m.name || '').slice(0, 50),
+      type: ['component', 'service', 'utility', 'model', 'config'].includes(m.type) ? m.type : 'other',
+      exports: Array.isArray(m.exports) ? m.exports.slice(0, 20) : [],
+      imports: Array.isArray(m.imports) ? m.imports.slice(0, 20) : []
+    })),
+    entry_points: Array.isArray(data.entry_points) ? data.entry_points.slice(0, 10) : [],
+    issues: Array.isArray(data.issues) ? data.issues.slice(0, 10) : []
+  };
+}
 
 export default router;
