@@ -4,19 +4,19 @@ import { streamClaudeResponse } from '../lib/claudeClient.js';
 const router = express.Router();
 
 const SYSTEM_PROMPTS = {
-  explain: `You are a senior software engineer and codebase analyst. Output ONLY valid JSON - no markdown, no explanation, no preamble. Start with { and end with }.`,
+  explain: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
 
-  debt: `You are a senior software engineer and codebase analyst. Output ONLY valid JSON - no markdown, no explanation, no preamble. Start with { and end with }.`,
+  debt: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
 
-  docs: `You are a senior software engineer and codebase analyst. Output ONLY valid JSON - no markdown, no explanation, no preamble. Start with { and end with }.`,
+  docs: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
 
-  refactor: `You are a senior software engineer and codebase analyst. Output ONLY valid JSON - no markdown, no explanation, no preamble. Start with { and end with }.`,
+  refactor: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`,
 
-  map: `You are a senior software engineer and codebase analyst. Output ONLY valid JSON - no markdown, no explanation, no preamble. Start with { and end with }.`
+  map: `You are a code analysis tool. Return ONLY raw JSON - no markdown, no code fences, no backticks, no explanation. Your response must start with "{" and be valid JSON.`
 };
 
 const USER_PROMPTS = {
-  explain: (code, language) => `Explain the following ${language || 'code'} in detail. Output ONLY valid JSON starting with { and ending with }. No markdown, no code blocks.
+  explain: (code, language) => `Explain the following ${language || 'code'} in detail. Return ONLY valid JSON. NO markdown. NO code fences. Start with { and end with }.
 
 Response format:
 {
@@ -32,7 +32,7 @@ Response format:
 CODE:
 ${code}`,
 
-  debt: (code, language) => `Perform a technical debt audit on the following ${language || 'code'}. Output ONLY valid JSON starting with { and ending with }. No markdown, no code blocks.
+  debt: (code, language) => `Perform a technical debt audit on the following ${language || 'code'}. Return ONLY valid JSON. NO markdown. NO code fences. Start with { and end with }.
 
 Response format (debt_score is 0-100, 0=pristine, 100=catastrophic):
 {
@@ -56,7 +56,7 @@ Response format (debt_score is 0-100, 0=pristine, 100=catastrophic):
 CODE:
 ${code}`,
 
-  docs: (code, language) => `Generate documentation for the following ${language || 'code'}. Output ONLY valid JSON starting with { and ending with }. No markdown, no code blocks.
+  docs: (code, language) => `Generate documentation for the following ${language || 'code'}. Return ONLY valid JSON. NO markdown. NO code fences. Start with { and end with }.
 
 Response format:
 {
@@ -78,7 +78,7 @@ Response format:
 CODE:
 ${code}`,
 
-  refactor: (code, language) => `Suggest refactors for the following ${language || 'code'}. Output ONLY valid JSON starting with { and ending with }. No markdown, no code blocks.
+  refactor: (code, language) => `Suggest refactors for the following ${language || 'code'}. Return ONLY valid JSON. NO markdown. NO code fences. Start with { and end with }.
 
 Response format:
 {
@@ -98,7 +98,7 @@ Response format:
 CODE:
 ${code}`,
 
-  map: (code, language) => `Analyze the architecture of the following ${language || 'code'} codebase. Output ONLY valid JSON starting with { and ending with }. No markdown, no code blocks.
+  map: (code, language) => `Analyze the architecture of the following ${language || 'code'} codebase. Return ONLY valid JSON. NO markdown. NO code fences. Start with { and end with }.
 
 Response format:
 {
