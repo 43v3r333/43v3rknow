@@ -4,30 +4,21 @@ import { streamClaudeResponse } from '../lib/claudeClient.js';
 const router = express.Router();
 
 const SYSTEM_PROMPTS = {
-  explain: `You are a senior software engineer and codebase analyst. You help developers understand unfamiliar code, identify technical debt, generate documentation, and suggest refactors. You are precise, structured, and direct. You never pad responses. Every finding has a severity label and a concrete next step.
+  explain: `You are a senior software engineer and codebase analyst. Output ONLY valid JSON - no markdown, no explanation, no preamble. Start with { and end with }.`,
 
-Always respond in valid JSON matching the schema provided. No markdown fences. No preamble. Return only the JSON object.`,
+  debt: `You are a senior software engineer and codebase analyst. Output ONLY valid JSON - no markdown, no explanation, no preamble. Start with { and end with }.`,
 
-  debt: `You are a senior software engineer and codebase analyst. You help developers understand unfamiliar code, identify technical debt, generate documentation, and suggest refactors. You are precise, structured, and direct. You never pad responses. Every finding has a severity label and a concrete next step.
+  docs: `You are a senior software engineer and codebase analyst. Output ONLY valid JSON - no markdown, no explanation, no preamble. Start with { and end with }.`,
 
-Always respond in valid JSON matching the schema provided. No markdown fences. No preamble. Return only the JSON object.`,
+  refactor: `You are a senior software engineer and codebase analyst. Output ONLY valid JSON - no markdown, no explanation, no preamble. Start with { and end with }.`,
 
-  docs: `You are a senior software engineer and codebase analyst. You help developers understand unfamiliar code, identify technical debt, generate documentation, and suggest refactors. You are precise, structured, and direct. You never pad responses. Every finding has a severity label and a concrete next step.
-
-Always respond in valid JSON matching the schema provided. No markdown fences. No preamble. Return only the JSON object.`,
-
-  refactor: `You are a senior software engineer and codebase analyst. You help developers understand unfamiliar code, identify technical debt, generate documentation, and suggest refactors. You are precise, structured, and direct. You never pad responses. Every finding has a severity label and a concrete next step.
-
-Always respond in valid JSON matching the schema provided. No markdown fences. No preamble. Return only the JSON object.`,
-
-  map: `You are a senior software engineer and codebase analyst. You help developers understand unfamiliar code, identify technical debt, generate documentation, and suggest refactors. You are precise, structured, and direct. You never pad responses. Every finding has a severity label and a concrete next step.
-
-Always respond in valid JSON matching the schema provided. No markdown fences. No preamble. Return only the JSON object.`
+  map: `You are a senior software engineer and codebase analyst. Output ONLY valid JSON - no markdown, no explanation, no preamble. Start with { and end with }.`
 };
 
 const USER_PROMPTS = {
-  explain: (code, language) => `Explain the following ${language || 'code'} in detail. Respond with JSON:
+  explain: (code, language) => `Explain the following ${language || 'code'} in detail. Output ONLY valid JSON starting with { and ending with }. No markdown, no code blocks.
 
+Response format:
 {
   "summary": "One paragraph plain-English explanation",
   "purpose": "What this code is trying to accomplish",
@@ -41,8 +32,9 @@ const USER_PROMPTS = {
 CODE:
 ${code}`,
 
-  debt: (code, language) => `Perform a technical debt audit on the following ${language || 'code'}. Respond with JSON:
+  debt: (code, language) => `Perform a technical debt audit on the following ${language || 'code'}. Output ONLY valid JSON starting with { and ending with }. No markdown, no code blocks.
 
+Response format (debt_score is 0-100, 0=pristine, 100=catastrophic):
 {
   "debt_score": 0,
   "score_rationale": "",
@@ -61,13 +53,12 @@ ${code}`,
   "summary": "Overall assessment"
 }
 
-debt_score is 0–100. 0 = pristine. 100 = catastrophic.
-
 CODE:
 ${code}`,
 
-  docs: (code, language) => `Generate documentation for the following ${language || 'code'}. Respond with JSON:
+  docs: (code, language) => `Generate documentation for the following ${language || 'code'}. Output ONLY valid JSON starting with { and ending with }. No markdown, no code blocks.
 
+Response format:
 {
   "file_summary": "",
   "functions": [
@@ -87,8 +78,9 @@ ${code}`,
 CODE:
 ${code}`,
 
-  refactor: (code, language) => `Suggest refactors for the following ${language || 'code'}. Respond with JSON:
+  refactor: (code, language) => `Suggest refactors for the following ${language || 'code'}. Output ONLY valid JSON starting with { and ending with }. No markdown, no code blocks.
 
+Response format:
 {
   "summary": "",
   "refactors": [
@@ -106,8 +98,9 @@ ${code}`,
 CODE:
 ${code}`,
 
-  map: (code, language) => `Analyze the architecture of the following ${language || 'code'} codebase. Respond with JSON:
+  map: (code, language) => `Analyze the architecture of the following ${language || 'code'} codebase. Output ONLY valid JSON starting with { and ending with }. No markdown, no code blocks.
 
+Response format:
 {
   "modules": [
     {
